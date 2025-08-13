@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Sanity Check • The Call from Ankyra — Episode Guide</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="styles.css" rel="stylesheet" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>Sanity Check <span class="dot">•</span> The Call from Ankyra</h1>
+    <input id="search" type="search" placeholder="Search titles, tags, plots, grime, characters…" />
+  </header>
+
+  <main id="app"></main>
+
+  <footer class="site-footer">
+    <nav class="footer-nav">
+      <a href="#/">Home</a>
+      <a href="#/series/sanity-check">Sanity Check</a>
+      <a href="#/series/call-from-ankyra">The Call from Ankyra</a>
+      <a href="#/echoes">Echo Timeline</a>
+      <a href="#/plots">Plot Tracker</a>
+      <a href="#/grime">Grime Index</a>
+      <a href="#/characters">Characters</a>
+    </nav>
+    <small>© Yours. Data-driven.</small>
+  </footer>
+
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal__close" id="modalClose" aria-label="Close">×</button>
+      <article id="modalContent"></article>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+
