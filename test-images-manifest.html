@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Manifest Image Test — Episode Ordinal 1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Inter,sans-serif;background:#111;color:#eee;padding:20px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+    figure{margin:0;background:#222;border:1px solid #333;border-radius:8px;overflow:hidden}
+    img{display:block;width:100%;height:120px;object-fit:cover}
+    figcaption{padding:6px 8px;font-size:12px;color:#bbb;word-break:break-all}
+    .bad{border-color:#f66}
+    code{background:#1a1a1a;padding:2px 4px;border-radius:4px}
+  </style>
+</head>
+<body>
+  <h1>Manifest Image Test — Episode Ordinal <code id="ord">1</code></h1>
+  <p>This uses <code>assets_manifest.js</code> and the same selection logic as the app (skipping 00000 if present).</p>
+  <div class="grid" id="g"></div>
+
+  <script src="assets_manifest.js"></script>
+  <script>
+    function pad(n,w){return String(n).padStart(w,'0')}
+
+    // choose an ordinal to test (1..54). Change this number to test other episodes.
+    const k = 1;
+    document.getElementById('ord').textContent = k;
+
+    const grid = document.getElementById('g');
+
+    function pickFile(files, k){
+      if(!files || !files.length) return null;
+      const m = (files[0]||"").match(/_(\d{5})\.png$/i);
+      const firstIs00000 = !!m && m[1]==="00000";
+      const idx = firstIs00000 ? k : (k-1);
+      return files[idx] || null;
+    }
+
+    for(let f=1; f<=60; f++){
+      const folder = pad(f,4);
+      const files = (window.ASSETS_MANIFEST?.[folder]||[]);
+      const fname = pickFile(files, k);
+
+      const fig = document.createElement('figure');
+      const img = document.createElement('img');
+      const cap = document.createElement('figcaption');
+
+      if(fname){
+        img.src = `assets/${folder}/${fname}`;
+        cap.textContent = `${folder}/${fname}`;
+      }else{
+        fig.classList.add('bad');
+        cap.textContent = `${folder}/(missing for index ${files[0] ? ( (files[0].match(/_(\\d{5})\\.png$/)||[])[1]==="00000" ? k : (k-1) ) : 'n/a'})`;
+      }
+
+      img.onerror = () => { fig.classList.add('bad'); };
+      fig.appendChild(img);
+      fig.appendChild(cap);
+      grid.appendChild(fig);
+    }
+  </script>
+</body>
+</html>
+

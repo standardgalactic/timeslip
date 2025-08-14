@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Image Load Test — Season 1 Episode 1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #eee;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+    }
+    .grid img {
+      max-width: 100%;
+      border: 2px solid #333;
+      background: #222;
+    }
+    .error {
+      border-color: red !important;
+    }
+  </style>
+</head>
+<body>
+  <h1>Season 1 Episode 1 — First 60 Images</h1>
+  <div class="grid" id="imageGrid"></div>
+
+  <script>
+    const folders = [];
+    for (let i = 1; i <= 60; i++) {
+      folders.push(i.toString().padStart(4, '0')); // "0001", "0002", etc.
+    }
+
+    const episodeImageIndex = 1; // Episode 1 → take the first image from each folder
+
+    const grid = document.getElementById('imageGrid');
+
+    folders.forEach(folder => {
+      const img = document.createElement('img');
+      img.src = `assets/${folder}/seed_801716_${String(episodeImageIndex).padStart(5, '0')}.png`;
+      img.alt = `${folder} - Image ${episodeImageIndex}`;
+      img.onerror = () => img.classList.add('error');
+      grid.appendChild(img);
+    });
+  </script>
+</body>
+</html>
+

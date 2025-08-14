@@ -1,0 +1,43 @@
+.list{margin:0;padding-left:18px}
+.list li{margin:4px 0;color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{background:var(--chip);border:1px solid var(--edge);border-radius:999px;padding:4px 8px;font-size:12px;color:var(--muted)}
+.filterbar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.input{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:8px 10px;color:var(--ink)}
+.gallery { display:grid; gap:8px; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); margin-top:10px }
+.gallery figure { margin:0; background:#0f1114; border:1px solid #23262b; border-radius:10px; overflow:hidden }
+.gallery img { display:block; width:100%; height:100%; object-fit:cover; aspect-ratio:1/1 }
+.search-hint{
+  display:block;
+  margin-top:4px;
+  color:var(--muted);
+  font-size:12px;
+}
+
+/* Home mosaic banner */
+.banner5.banner--home{
+  display:grid;
+  gap:6px;                                /* tighter spacing */
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  margin:10px 0 16px;
+  align-items:center;
+}
+.banner5.banner--home figure{
+  margin:0;
+  height:150px;                           /* uniform row height */
+  border-radius:8px;
+  border:1px solid var(--edge);
+  background:var(--card);                 /* blends with your card bg */
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.banner5.banner--home img{
+  max-width:100%;
+  max-height:100%;
+  width:auto;height:auto;                 /* show whole image */
+  object-fit:contain;
+  display:block;
+}
+@media (min-width:900px){
+  .banner5.banner--home figure{height:170px}
+}
