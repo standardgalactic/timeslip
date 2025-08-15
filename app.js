@@ -65,6 +65,68 @@
       </section>`;
   }
 
+// Build path like episodes/sanity-check/S1E01.md
+function epMdPath(seriesId, seasonN, epN){
+  const S = String(seasonN);
+  const E = String(epN).padStart(2, '0');
+  return `episodes/${seriesId}/S${S}E${E}.md`;
+}
+
+// Simple fetch with cache
+const _mdCache = new Map();
+async function loadEpisodeMd(seriesId, seasonN, epN){
+  const url = epMdPath(seriesId, seasonN, epN);
+  if (_mdCache.has(url)) return _mdCache.get(url);
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) { _mdCache.set(url, ""); return ""; }
+    const text = await res.text();
+    _mdCache.set(url, text);
+    return text;
+  } catch { _mdCache.set(url, ""); return ""; }
+}
+
+// Extract a named Markdown section by heading text (case-insensitive).
+// Grabs everything from the matching heading until the next heading of same or higher level.
+function getMdSection(md, targetTitle = "Long Synopsis"){
+  if (!md) return "";
+  const lines = md.replace(/\r\n/g, "\n").split("\n");
+  const t = targetTitle.trim().toLowerCase();
+
+  let start = -1, level = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^(#{1,6})\s+(.*)$/);
+    if (!m) continue;
+    const [ , hashes, title ] = m;
+    if (title.trim().toLowerCase() === t) {
+      start = i + 1;               // content starts after this heading
+      level = hashes.length;       // heading level (## => 2, etc.)
+      break;
+    }
+  }
+  if (start === -1) return "";
+
+  // collect until next heading of same or higher level
+  let end = lines.length;
+  for (let j = start; j < lines.length; j++) {
+    const m2 = lines[j].match(/^(#{1,6})\s+(.*)$/);
+    if (m2 && m2[1].length <= level) { end = j; break; }
+  }
+  return lines.slice(start, end).join("\n").trim();
+}
+
+// Very-light Markdown to HTML (bold, paragraphs, line breaks)
+function mdLite(md){
+  if (!md) return "";
+  return md
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .split(/\n{2,}/)
+    .map(p => `<p>${p.replace(/\n/g, "<br/>")}</p>`)
+    .join("");
+}
+
+
+
   // --- Gallery helpers ---
   function getFirstN(arr, n){ return (arr||[]).slice(0, n); }
 
@@ -404,6 +466,7 @@
     const ss = s?.seasons.find(x => x.n === sn);
     const ep = ss?.episodes.find(x => x.n === en);
 
+
     // Build base HTML with a placeholder for the banner
     modalContent.innerHTML = `
       <h2 id="modal-title">${s.title} — S${sn}E${en}: <span class="hl">${ep.title}</span></h2>
@@ -416,31 +479,46 @@
       ${(ep.grime && ep.grime.length) ? `<h3>Grime & Crud</h3><ul class="list">${ep.grime.map(g => `<li>${g}</li>`).join(" ")}</ul>` : " "}
       ${(ep.beats && ep.beats.length) ? `<h3>Beats</h3><ul class="list">${ep.beats.map(b => `<li>${b}</li>`).join(" ")}</ul>` : " "}
       ${(ep.echoes || []).length ? `<div class="alert small"><strong>Echoes:</strong> ${ep.echoes.map(ec => ec.note).join(" • ")}</div>` : " "}
+  <div id="__long__"></div>
     `;
 
     // Fill the banner placeholder
     const bannerImgs = buildEpisodeBanner(s.id, ss.n, ep.n, 5);
     $("#__banner__").outerHTML = renderBanner(bannerImgs);
 
-    // Gallery without debug
-    const gallery = buildEpisodeGallery(s.id, ss.n, ep.n);
-    if (gallery.length) {
-      modalContent.insertAdjacentHTML("beforeend", `
-        <h3>Gallery (${gallery.length} images)</h3>
-        <div class="gallery">
-          ${gallery.map(src => `
-            <figure title="${src}">
-              <img loading="lazy" src="${src}" alt="">
-            </figure>
-          `).join("")}
-        </div>
-      `);
-    } else {
-      const msg = !window.ASSETS_MANIFEST
-        ? `No gallery yet — generate <code>assets_manifest.js</code> with <code>node scripts/build-manifest.js</code>.`
-        : `No images selected. Check each folder 0001…0060 has at least <code>${episodeOrdinal(s.id, ss.n, ep.n)}</code> files and filenames end with <code>_00001.png</code>… style 5-digit indices.`;
-      modalContent.insertAdjacentHTML("beforeend", `<div class="alert small">${msg}</div>`);
-    }
+// Fetch MD and inject "Long Synopsis" after Plots/Grime/Beats
+loadEpisodeMd(s.id, ss.n, ep.n).then(md => {
+  const long = getMdSection(md, "Long Synopsis"); // heading match is case-insensitive
+  const slot = document.getElementById("__long__");
+  if (!slot) return;
+  if (long) {
+    slot.outerHTML = `<h3>Long Synopsis</h3>${mdLite(long)}`;
+  } else {
+    // If no section found, remove the placeholder
+    slot.remove();
+  }
+}).catch(err => {
+  console.warn("Failed to load episode MD:", err);
+});
+
+   const gallery = buildEpisodeGallery(s.id, ss.n, ep.n);
+if (gallery.length) {
+  modalContent.insertAdjacentHTML("beforeend", `
+    <h3>Gallery (${gallery.length} images)</h3>
+    <div class="gallery">
+      ${gallery.map(src => `
+        <figure title="${src}">
+          <img loading="lazy" src="${src}" alt="">
+        </figure>
+      `).join("")}
+    </div>
+  `);
+} else {
+  const msg = !window.ASSETS_MANIFEST
+    ? `No gallery yet — generate <code>assets_manifest.js</code> with <code>node scripts/build-manifest.js</code>.`
+    : `No images selected. Check each folder 0001…0060 has at least <code>${episodeOrdinal(s.id, ss.n, ep.n)}</code> files.`;
+  modalContent.insertAdjacentHTML("beforeend", `<div class="alert small">${msg}</div>`);
+}
 
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
